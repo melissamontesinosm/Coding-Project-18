@@ -1,31 +1,34 @@
 
 // Create the Reusable Chart Component
 
-import React, { useRef, useEffect } from "react";
-import { Chart } from "chart.js";
+import React, { useEffect, useRef } from "react";
+import { Chart, registerables } from "chart.js";
 
-const ChartComponent = ({ type = "bar", data, options }) => {
+Chart.register(...registerables);
+
+const ChartComponent = ({ type, data, options }) => {
   const chartRef = useRef(null);
-  const chartInstance = useRef(null);
+  const chartInstanceRef = useRef(null);
 
   useEffect(() => {
-    if (chartRef.current) {
-      // Initialize or re-initialize the Chart.js instance
-      if (chartInstance.current) {
-        chartInstance.current.destroy();
-      }
+    const ctx = chartRef.current.getContext("2d");
 
-      chartInstance.current = new Chart(chartRef.current, {
-        type,
-        data,
-        options,
-      });
+    // Cleanup the previous chart instance if it exists
+    if (chartInstanceRef.current) {
+      chartInstanceRef.current.destroy();
     }
 
-    // Cleanup on unmount
+    // Initialize the Chart
+    chartInstanceRef.current = new Chart(ctx, {
+      type,
+      data,
+      options,
+    });
+
     return () => {
-      if (chartInstance.current) {
-        chartInstance.current.destroy();
+      // Cleanup on component unmount
+      if (chartInstanceRef.current) {
+        chartInstanceRef.current.destroy();
       }
     };
   }, [type, data, options]);
